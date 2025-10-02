@@ -132,7 +132,7 @@
 				refresh(searchbar.value);
 			}
 
-			searchbar.addEventListener("input", (e) => refrest(e.target.value));
+			searchbar.addEventListener("input", (e) => refresh(e.target.value));
 			lvdstbox.addEventListener("input", _ => refresh(searchbar.value));
 			redraw(_ => true, _ => true);
 		</script>
