@@ -1,0 +1,131 @@
+<!doctype html>
+
+<!-- see UNLICENSE file in the website's source code for copyright and license details. -->
+
+<html lang="en-US">
+	<head>
+		<meta charset="utf-8">
+		<meta name="darkreader-lock">
+		<title>The Banguage Dictionary Nth Edition</title>
+		<style>
+			* {
+				font-family: "JetBrains Mono", monospace;
+				font-optical-sizing: auto;
+				font-weight: 400;
+				font-style: normal;
+				font-variant-ligatures: none;
+			}
+
+			html {
+				background-color: #11111b;
+				color: #cdd6f4;
+			}
+
+			.search {
+				display: block;
+				margin-left: auto;
+				margin-right: auto;
+				width: 90%;
+				background-color: #11111b;
+				border: 4px solid #cdd6f4;
+
+				text-align: center;
+				color: #cdd6f4;
+			}
+
+			.lvdst {
+				width: 20%;
+				background-color: #11111b;
+				border: 2px solid #cdd6f4;
+
+				color: #cdd6f4;
+			}
+
+			.inline {
+				display: inline;
+			}
+
+			ol {
+				display: inline;
+			}
+
+			li {
+				margin-left: 2em;
+				padding-left: 0.5em;
+			}
+
+			i {
+				font-style: italic;
+			}
+
+			.subtext {
+				color: #a6adc8;
+				opacity: 0.8;
+			}
+
+			.greyout {
+				text-decoration: line-through;
+				color: #a6adc8;
+				opacity: 0.6;
+			}
+
+			.container {
+				background-color: #181825;
+				border: 4px solid #cdd6f4;
+				margin-top: 2vh;
+				padding-top: 1vh;
+				padding-left: 2vh;
+				padding-right: 2vh;
+				min-height: 94vh;
+				height: 94vh;
+				vertical-align: top;
+			}
+
+			.container-left {
+				display: inline-block;
+				width: 20%;
+				margin-left: 2vh;
+			}
+
+			.container-right {
+				display: inline-block;
+				width: 70%;
+				/* float: right; */
+				padding-left: 4vh;
+				margin-right: 2vh;
+
+				overflow-y: scroll;
+			}
+
+			.clearfix {
+				clear: both;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container container-left">
+			<input type="text" class="search" id="search" name="search" placeholder="words/defs or #tags..." autocomplete="off">
+
+			<br><p class="inline">search for:</p><br>
+			<input type="radio" id="searchmode_words" name="searchmode" checked onclick="setsearchmode('words')" autocomplete="off">
+			<label for="searchmode_words">words</label><br>
+			<input type="radio" id="searchmode_defs" name="searchmode" onclick="setsearchmode('defs')" autocomplete="off">
+			<label for="searchmode_defs">word definitions</label><br>
+
+			<br><p class="inline">word/definition matching mode:</p><br>
+			<input type="radio" id="wmatchmode_plain" name="wmatchmode" checked onclick="setwmmode('plain')" autocomplete="off">
+			<label for="matchmode_plain">plain</label><br>
+			<input type="radio" id="wmatchmode_exact" name="wmatchmode" onclick="setwmmode('exact')" autocomplete="off">
+			<label for="matchmode_exact">exact</label><br>
+			<input type="radio" id="wmatchmode_regex" name="wmatchmode" onclick="setwmmode('regex')" autocomplete="off">
+			<label for="matchmode_regex">regex</label><br>
+			<input type="radio" id="wmatchmode_levenshtein" name="wmatchmode" onclick="setwmmode('levenshtein')" autocomplete="off">
+			<label for="matchmode_levenshtein">levenshtein distance &lt;=</label>
+			<input type="number" class="lvdst" id="lvdst" name="lvdst" placeholder="1" autocomplete="off">
+		</div>
+		<div class="container container-right" id="main">
+			<p>if you're reading this, something went wrong (or maybe the page just hasn't loaded?)</p>
+		</div>
+		<div class="clearfix"></div>
+		<script>
+			// START OF AUTO-GENERATED CODE REGION

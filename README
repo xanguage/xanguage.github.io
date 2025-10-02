@@ -1,0 +1,2 @@
+generate with
+./gen.sh | cat webpage/webpage.html.part1 - webpage/webpage.html.part2 > index.html
