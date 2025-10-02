@@ -69,6 +69,10 @@
 				opacity: 0.6;
 			}
 
+			.container-parent {
+				display: flex;
+			}
+
 			.container {
 				background-color: #181825;
 				border: 4px solid #cdd6f4;
@@ -82,51 +86,46 @@
 			}
 
 			.container-left {
-				display: inline-block;
-				width: 20%;
+				flex: 0.2;
 				margin-left: 2vh;
 			}
 
 			.container-right {
-				display: inline-block;
-				width: 70%;
-				/* float: right; */
+				flex: 0.8;
 				padding-left: 4vh;
+				margin-left: 2vh;
 				margin-right: 2vh;
 
 				overflow-y: scroll;
 			}
-
-			.clearfix {
-				clear: both;
-			}
 		</style>
 	</head>
 	<body>
-		<div class="container container-left">
-			<input type="text" class="search" id="search" name="search" placeholder="words/defs or #tags..." autocomplete="off">
+		<div class="container-parent">
+			<div class="container container-left">
+				<input type="text" class="search" id="search" name="search" placeholder="words/defs or #tags..." autocomplete="off">
 
-			<br><p class="inline">search for:</p><br>
-			<input type="radio" id="searchmode_words" name="searchmode" checked onclick="setsearchmode('words')" autocomplete="off">
-			<label for="searchmode_words">words</label><br>
-			<input type="radio" id="searchmode_defs" name="searchmode" onclick="setsearchmode('defs')" autocomplete="off">
-			<label for="searchmode_defs">word definitions</label><br>
+				<br><p class="inline">search for:</p><br>
+				<input type="radio" id="searchmode_words" name="searchmode" checked onclick="setsearchmode('words')" autocomplete="off">
+				<label for="searchmode_words">words</label><br>
+				<input type="radio" id="searchmode_defs" name="searchmode" onclick="setsearchmode('defs')" autocomplete="off">
+				<label for="searchmode_defs">word definitions</label><br>
 
-			<br><p class="inline">word/definition matching mode:</p><br>
-			<input type="radio" id="wmatchmode_plain" name="wmatchmode" checked onclick="setwmmode('plain')" autocomplete="off">
-			<label for="matchmode_plain">plain</label><br>
-			<input type="radio" id="wmatchmode_exact" name="wmatchmode" onclick="setwmmode('exact')" autocomplete="off">
-			<label for="matchmode_exact">exact</label><br>
-			<input type="radio" id="wmatchmode_regex" name="wmatchmode" onclick="setwmmode('regex')" autocomplete="off">
-			<label for="matchmode_regex">regex</label><br>
-			<input type="radio" id="wmatchmode_levenshtein" name="wmatchmode" onclick="setwmmode('levenshtein')" autocomplete="off">
-			<label for="matchmode_levenshtein">levenshtein distance &lt;=</label>
-			<input type="number" class="lvdst" id="lvdst" name="lvdst" placeholder="1" autocomplete="off">
+				<br><p class="inline">word/definition matching mode:</p><br>
+				<input type="radio" id="wmatchmode_plain" name="wmatchmode" checked onclick="setwmmode('plain')" autocomplete="off">
+				<label for="matchmode_plain">plain</label><br>
+				<input type="radio" id="wmatchmode_exact" name="wmatchmode" onclick="setwmmode('exact')" autocomplete="off">
+				<label for="matchmode_exact">exact</label><br>
+				<input type="radio" id="wmatchmode_regex" name="wmatchmode" onclick="setwmmode('regex')" autocomplete="off">
+				<label for="matchmode_regex">regex</label><br>
+				<input type="radio" id="wmatchmode_levenshtein" name="wmatchmode" onclick="setwmmode('levenshtein')" autocomplete="off">
+				<label for="matchmode_levenshtein">levenshtein distance &lt;=</label>
+				<input type="number" class="lvdst" id="lvdst" name="lvdst" placeholder="1" autocomplete="off">
+			</div>
+			<div class="container container-right" id="main">
+				<p>if you're reading this, something went wrong (or maybe the page just hasn't loaded?)</p>
+			</div>
 		</div>
-		<div class="container container-right" id="main">
-			<p>if you're reading this, something went wrong (or maybe the page just hasn't loaded?)</p>
-		</div>
-		<div class="clearfix"></div>
 		<script>
 			// START OF AUTO-GENERATED CODE REGION
 const wordlist = ["accapa", "aff", "aippe", "ajï", "ajpe", "ajta", "akei", "akka", "akosa", "akupo", "äl", "alsa", "ame", "amu", "äni", "anipa", "anpa", "apai", "asai", "blijap", "cäja", "cama", "dopan", "eka", "eni", "gama", "gatta", "goaorks", "haj", "ħaru", "hima", "ica", "ie", "ija", "iku", "ila", "iri", "isa", "jei", "ka", "kajo", "kâla", "kami", "käni", "kata", "kígi", "kiki", "kimárin", "kowun", "kuráwo", "lakjo", "läpúmi", "le", "liwa", "loki", "ma", "maja", "mama", "máma", "mi", "mjäw", "mori", "mrojie", "mrojin", "mrow", "mu", "no", "noj", "ølu", "osura", "osuro", "otsï", "pajtï", "papa", "pápa", "pawa", "pi", "pika", "ri", "sa", "sajáwa", "sha", "shälï", "sila", "soii", "sosoe", "swóa", "tä", "taa", "taja", "tajama", "takkaw", "tako", "tali", "tamu", "tawa", "tema", "tïkka", "tsajï", "va", "väl", "vi", "vir", "viru", "wajo", "waki", "wakke", "wäli", "wappe", "wawa", "wómi", "wupo", "wzow"];
@@ -267,11 +266,7 @@ const taglist = [[["adjective", "commonword", "color"], ["noun", "uncountable", 
 				refresh(searchbar.value);
 			}
 
-			const searchInputCallback = function(e) {
-				refresh(e.target.value);
-			}
-
-			searchbar.addEventListener("input", searchInputCallback);
+			searchbar.addEventListener("input", (e) => refrest(e.target.value));
 			lvdstbox.addEventListener("input", _ => refresh(searchbar.value));
 			redraw(_ => true, _ => true);
 		</script>
