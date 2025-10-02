@@ -1,2 +1,3 @@
 generate with
-./gen.sh | cat webpage/webpage.html.part1 - webpage/webpage.html.part2 > index.html
+cc -O3 -march=native gen.c -o gen
+./gen | cat webpage/webpage.html.part1 - webpage/webpage.html.part2 > index.html
