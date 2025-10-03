@@ -15,7 +15,7 @@
 			font-weight: 400;
 			font-style: normal;
 			font-variant-ligatures: none;
-			border-radius: 1rem;
+			border-radius: 0.5rem;
 		}
 
 		html {
@@ -267,6 +267,7 @@ function redraw(wordDisplayCallback, defDisplayCallback) {
 			mainarea.insertAdjacentHTML("beforeend", "<ol>");
 			desclist[idx].forEach(function(subitem, subidx) {
 				let x = defDisplayCallback(taglist[idx][subidx], deflist[idx][subidx]) ? "" : " class=\"greyout\"";
+				// this line is 225 cols long :face_holding_back_tears:
 				mainarea.insertAdjacentHTML("beforeend", "<li" + x + "><i>" + subitem + "</i> " + deflist[idx][subidx] + (!hide_tags ? ("<br><p class=\"inline subtext\">tags: " + taglist[idx][subidx].join(" ") + "</p>") : "") + "</li>");
 			});
 			mainarea.insertAdjacentHTML("beforeend", "</ol><br>");
