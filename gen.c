@@ -9,13 +9,19 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef __APPLE__
+void *mempcpy(void *dest, void const *src, size_t len);
+#endif
+
 #define DICTIONARY_PATH "dictionary"
 
-// buffer sizes for individual words and files for words, might wanna adjust this if things get bigger
+/* buffer sizes for individual words and files for words,
+ * might wanna adjust this if things get bigger */
 #define WORDBUFSIZE 32
 #define FILEBUFSIZE 2048
 
-// pre-allocated buffer sizes for the 4 lists, will be realloc'd by _INCR more bytes if there's not enough space
+/* pre-allocated buffer sizes for the 4 lists, 
+ * will be realloc'd by _INCR more bytes if there's not enough space */
 #define WORDLIST_PREALLOC 128
 #define WORDLIST_INCR 128
 
@@ -49,7 +55,8 @@ erealloc(void *ptr, size_t size)
 }
 
 static unsigned char *
-escquot(unsigned char *restrict dst, const unsigned char *restrict src, size_t n)
+escquot(unsigned char *restrict dst, const unsigned char *restrict src,
+		size_t n)
 {
 	const unsigned char *const end = src + n;
 	const unsigned char *p = src;
@@ -132,6 +139,9 @@ output_everything_else(char *const *wl, size_t sz)
 		buf[nread] = '\0';
 		line = buf;
 
+		// ok yeah i give up trying to make this fit within 80 columns 
+		/* how do you use the worst variable names imaginable and it's
+		 * still too wide to fit on my screen */
 		while (*line != '\0') {
 			// definition
 			if (!(p = strchr(line, '|')))
