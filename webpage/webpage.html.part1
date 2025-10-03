@@ -95,10 +95,10 @@
 		/* jank to make the scrollbar background not clip the border */
 		.container-right-wrapper {
 			flex: 0.8;
-			padding-left: 4vh;
+			padding-left: 3vh;
 			margin-left: 2vh;
 			margin-right: 2vh;
-			padding-right: 1vh;
+			padding-right: 0;
 
 			overflow: hidden;
 			display: flex;
@@ -111,6 +111,30 @@
 			flex-grow: 1;
 
 			border-radius: 0;
+		}
+
+		/* todo: add hover effects for both entry and def */
+
+		.entry {
+			padding: 1vh;
+		}
+
+		.entry:hover {
+			/* todo: replace with actual colors from the palette when i have
+			 * internet */
+			background-color: #1e1e2e;
+		}
+		
+		.def {
+			border-radius: 0.5rem;
+		}
+
+		.def:hover {
+			background-color: #313244;
+		}
+
+		.collapsed {
+			display: none;
 		}
 	</style>
 </head>

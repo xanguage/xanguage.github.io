@@ -105,16 +105,35 @@ function redraw(wordDisplayCallback, defDisplayCallback) {
 	mainarea.textContent = ""; // clear all children
 	wordlist.forEach(function(item, idx) {
 		if (wordDisplayCallback(item, deflist[idx], taglist[idx])) {
-			mainarea.insertAdjacentHTML("beforeend", "<h3 class=\"inline\"><strong>" + item + "</strong></h3>");
-			mainarea.insertAdjacentHTML("beforeend", "<ol>");
+			word_div = mainarea.insertAdjacentElement("beforeend", document.createElement("div"));
+			word_div.classList.add("entry");
+			word_div.insertAdjacentHTML("beforeend", "<h3 class=\"inline word\"><strong>" + item + "</strong></h3> ");
+			defs_div = word_div.insertAdjacentElement("beforeend", document.createElement("div"));
+			defs_div.classList.add("defs");
 			desclist[idx].forEach(function(subitem, subidx) {
 				let x = defDisplayCallback(taglist[idx][subidx], deflist[idx][subidx]) ? "" : " class=\"greyout\"";
-				// this line is 225 cols long :face_holding_back_tears:
-				mainarea.insertAdjacentHTML("beforeend", "<li" + x + "><i>" + subitem + "</i> " + deflist[idx][subidx] + (!hide_tags ? ("<br><p class=\"inline subtext\">tags: " + taglist[idx][subidx].join(" ") + "</p>") : "") + "</li>");
+				// this line is 239 cols long :face_holding_back_tears:
+				defs_div.insertAdjacentHTML("beforeend", "<li class=\"def\"" + x + "><i>" + subitem + "</i> " + deflist[idx][subidx] + (!hide_tags ? ("<br><p class=\"inline subtext\">tags: " + taglist[idx][subidx].join(" ") + "</p>") : "") + "</li>");
 			});
-			mainarea.insertAdjacentHTML("beforeend", "</ol><br>");
 		}
 	});
+
+	for (let word of document.getElementsByClassName("word")) {
+		word.addEventListener("click", _ => {
+			// todo: add some sort of indicator that the word is collapsed
+			// like a chevron or something idk
+			let defs = word.nextElementSibling;
+			defs.classList.toggle("collapsed");
+		});
+	}
+
+	// todo: when clicking on a def, copy it
+
+	// for (let def of document.getElementsByClassName("def")) {
+	// 	def.addEventListener("click", _ => {
+	//
+	// 	});
+	// }
 }
 
 function refresh(input) {
@@ -143,4 +162,5 @@ document.addEventListener("keypress", (e) => {
 		refresh(searchbar.value);
 	}
 });
+
 redraw(_ => true, _ => true);
