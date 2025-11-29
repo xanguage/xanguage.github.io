@@ -25,6 +25,9 @@ void *mempcpy(void *dest, void const *src, size_t len);
 #define WORDLIST_PREALLOC 128
 #define WORDLIST_INCR 128
 
+#define ETYLIST_PREALLOC 16384
+#define ETYLIST_INCR 8192
+
 #define DESCLIST_PREALLOC 8192
 #define DESCLIST_INCR 4096
 
@@ -52,6 +55,15 @@ erealloc(void *ptr, size_t size)
 	if (!rv)
 		err(1, "realloc");
 	return rv;
+}
+
+static inline size_t
+countquot(const char *s, size_t l)
+{
+	size_t count = 0;
+	for (size_t i = 0; i < l; i++)
+		count += (s[i] == '"');
+	return count;
 }
 
 static unsigned char *
@@ -101,22 +113,79 @@ boundscheck(size_t n, size_t *bufsz, size_t szincr, char **buf, char **bufp)
 {
 	if (*bufp + n > *buf + *bufsz) {
 		size_t poff = *bufp - *buf;
-		*bufsz += szincr;
+		*bufsz += (szincr >= n) ? szincr : n;
 		*buf = erealloc(*buf, *bufsz);
 		*bufp = *buf + poff;
 	}
 }
 
 static void
+nextety(char **defp, char **descp, char **tagp,
+	char **deflist, char **desclist, char **taglist,
+	size_t *deflistsz, size_t *desclistsz, size_t *taglistsz)
+{
+	// replace final ," with ],[" and ,[" with ],[["
+	(*defp) += 2;
+	(*descp) += 2;
+	(*tagp) += 2;
+	boundscheck(2, deflistsz, 2, deflist, defp);
+	memcpy((*defp) - 4, "],[\"", 4);
+	boundscheck(2, desclistsz, 2, desclist, descp);
+	memcpy((*descp) - 4, "],[\"", 4);
+	boundscheck(2, taglistsz, 2, taglist, tagp);
+	memcpy((*tagp) - 5, "],[[\"", 5);
+}
+
+static void
+nextword(char **etyp, char **defp, char **descp, char **tagp,
+	char **etylist, char **deflist, char **desclist, char **taglist,
+	size_t *etylistsz, size_t *deflistsz, size_t *desclistsz, size_t *taglistsz)
+{
+	// replace final ," with ],["
+	(*etyp) += 2;
+	boundscheck(2, etylistsz, 2, etylist, etyp);
+	memcpy((*etyp) - 4, "],[\"", 4);
+
+	// replace final ,[" with "]],[["
+	(*defp) += 4;
+	(*descp) += 4;
+	boundscheck(4, deflistsz, 4, deflist, defp);
+	memcpy((*defp) - 7, "\"]],[[\"", 7);
+	boundscheck(4, desclistsz, 4, desclist, descp);
+	memcpy((*descp) - 7, "\"]],[[\"", 7);
+
+	// replace final ,[[" with ]]],[[["
+	(*tagp) += 4;
+	boundscheck(4, taglistsz, 4, taglist, tagp);
+	memcpy((*tagp) - 8, "]]],[[[\"", 8);
+}
+
+static void
+end(char **etyp, char **defp, char **descp, char **tagp)
+{
+	// replace final ,[" ,[[" ,[[[" with ]
+	(*etyp) -= 2;
+	(*defp) -= 3;
+	(*descp) -= 3;
+	(*tagp) -= 4;
+	*((*etyp) - 1) = *((*defp) - 1) = *((*descp) - 1) = *((*tagp) - 1) = ']';
+	*(*etyp) = *(*defp) = *(*descp) = *(*tagp) = '\0';
+}
+
+static void
 output_everything_else(char *const *wl, size_t sz)
 {
-	size_t desclistsz = DESCLIST_PREALLOC;
-	char *desclist = emalloc(desclistsz);
-	char *descp = desclist;
+	size_t etylistsz = ETYLIST_PREALLOC;
+	char *etylist = emalloc(etylistsz);
+	char *etyp = etylist;
 
 	size_t deflistsz = DEFLIST_PREALLOC;
 	char *deflist = emalloc(deflistsz);
 	char *defp = deflist;
+
+	size_t desclistsz = DESCLIST_PREALLOC;
+	char *desclist = emalloc(desclistsz);
+	char *descp = desclist;
 
 	size_t taglistsz = TAGLIST_PREALLOC;
 	char *taglist = emalloc(taglistsz);
@@ -131,6 +200,7 @@ output_everything_else(char *const *wl, size_t sz)
 	char *line;
 	char *p, *p2;
 	ssize_t nread;
+	int newword;
 	for (size_t i = 0; i < sz; i++) {
 		if ((fd = openat(dirfd, wl[i], O_RDONLY)) < 0)
 			err(1, "open " DICTIONARY_PATH "/%s", wl[i]);
@@ -138,16 +208,36 @@ output_everything_else(char *const *wl, size_t sz)
 			err(1, "read " DICTIONARY_PATH "/%s", wl[i]);
 		buf[nread] = '\0';
 		line = buf;
+		newword = 1;
 
 		// ok yeah i give up trying to make this fit within 80 columns 
 		/* how do you use the worst variable names imaginable and it's
 		 * still too wide to fit on my screen */
 		while (*line != '\0') {
+			if (line[0] == '>') {
+				if (!(p = strchr(line, '\n')))
+					errx(1, "invalid data in file " DICTIONARY_PATH "/%s: was expecting newline!", wl[i]);
+				*p = '\0';
+
+				// - 1 to remove leading >
+				size_t l = strlen(line) - 1;
+				boundscheck(l + countquot(line + 1, l) + 3, &etylistsz, ETYLIST_INCR, &etylist, &etyp);
+				etyp = mempcpy(escquot(etyp, line + 1, l), "\",\"", 3);
+
+				if (!newword)
+					nextety(&defp, &descp, &tagp,
+						&deflist, &desclist, &taglist,
+						&deflistsz, &desclistsz, &taglistsz);
+
+				line = p + 1;
+				continue;
+			}
+ 
 			// definition
 			if (!(p = strchr(line, '|')))
 				errx(1, "invalid data in file " DICTIONARY_PATH "/%s: was expecting | character!", wl[i]);
 			*p = '\0';
-			boundscheck((p - line) + 3, &deflistsz, DEFLIST_INCR, &deflist, &defp);
+			boundscheck((p - line) + countquot(line, p - line) + 3, &deflistsz, DEFLIST_INCR, &deflist, &defp);
 			defp = mempcpy(escquot(defp, line, p - line), "\",\"", 3);
 
 			// descriptor
@@ -155,7 +245,7 @@ output_everything_else(char *const *wl, size_t sz)
 			if (!(p = strchr(p2, '|')))
 				errx(1, "invalid data in file " DICTIONARY_PATH "/%s: was expecting | character!", wl[i]);
 			*p = '\0';
-			boundscheck((p - p2) + 3, &desclistsz, DESCLIST_INCR, &desclist, &descp);
+			boundscheck((p - p2) + countquot(p2, p - p2) + 3, &desclistsz, DESCLIST_INCR, &desclist, &descp);
 			descp = mempcpy(escquot(descp, p2, p - p2), "\",\"", 3);
 
 			// tags
@@ -172,33 +262,23 @@ output_everything_else(char *const *wl, size_t sz)
 			boundscheck((line - p2) + 5, &taglistsz, TAGLIST_INCR, &taglist, &tagp);
 			tagp = mempcpy(mempcpy(tagp, p2, line - p2), "\"],[\"", 5);
 			line++;
+			newword = 0;
 		}
-		// replace final ," with ],[" and ,[" with ],[["
-		defp += 2;
-		descp += 2;
-		tagp += 2;
-		boundscheck(2, &deflistsz, 2, &deflist, &defp);
-		memcpy(defp - 4, "],[\"", 4);
-		boundscheck(2, &desclistsz, 2, &desclist, &descp);
-		memcpy(descp - 4, "],[\"", 4);
-		boundscheck(2, &taglistsz, 2, &taglist, &tagp);
-		memcpy(tagp - 5, "],[[\"", 5);
+		nextword(&etyp, &defp, &descp, &tagp,
+			&etylist, &deflist, &desclist, &taglist,
+			&etylistsz, &deflistsz, &desclistsz, &taglistsz);
 		close(fd);
 	}
 	close(dirfd);
 
-	// replace ,[" or ,[[" with ]
-	defp -= 2;
-	descp -= 2;
-	tagp -= 3;
-	*(defp - 1) = *(descp - 1) = *(tagp - 1) = ']';
+	end(&etyp, &defp, &descp, &tagp);
 
-	*defp = *descp = *tagp = '\0';
-	printf("const desclist = [[\"%s;\nconst deflist = [[\"%s;\nconst taglist = [[[\"%s;\n", desclist, deflist, taglist);
+	printf("const etylist=[[\"%s;\nconst desclist = [[[\"%s;\nconst deflist = [[[\"%s;\nconst taglist = [[[[\"%s;\n", etylist, desclist, deflist, taglist);
 	free(buf);
 	free(taglist);
-	free(deflist);
 	free(desclist);
+	free(deflist);
+	free(etylist);
 }
 
 int

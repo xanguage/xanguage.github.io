@@ -1,6 +1,6 @@
 all: webpage
 
-webpage: gen
+webpage: gen webpage/webpage.html.part1 webpage/webpage.html.part2 webpage/webpage.js
 	./gen | cat webpage/webpage.html.part1 - webpage/webpage.js webpage/webpage.html.part2 > index.html;
 
 gen:

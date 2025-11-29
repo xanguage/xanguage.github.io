@@ -124,7 +124,11 @@
 			 * internet */
 			background-color: #1e1e2e;
 		}
-		
+
+		.ety {
+			border-radius: 0.5rem;
+		}
+
 		.def {
 			border-radius: 0.5rem;
 		}

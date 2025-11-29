@@ -37,7 +37,7 @@ function match(x, y) {
 	}
 }
 
-function shouldDisplayWord(input, word, defs, alltags) {
+function shouldDisplayWord(input, word, etys, alltags) {
 	const searchfortags = input.includes("#");
 
 	// split at spaces except inside single quotes
@@ -57,15 +57,19 @@ function shouldDisplayWord(input, word, defs, alltags) {
 						matchedword = true;
 					break;
 				case "defs":
-					defs.forEach(function(def, idx) {
-						if (match(item, def))
-							matcheddef.push(idx);
+					etys.forEach(function(i, n) {
+						i.forEach(function(def, idx) {
+							if (match(item, def))
+								matcheddef.push(def);
+						});
 					});
 			}
 		} else {
-			alltags.forEach(function(tags, idx) {
-				if (tags.includes(item.slice(1)))
-					matchedtags.push(idx);
+			alltags.forEach(function(i, n) {
+				i.forEach(function(tags, idx) {
+					if (tags.includes(item.slice(1)))
+						matchedtags.push(tags);
+				});
 			});
 		}
 	});
@@ -76,7 +80,16 @@ function shouldDisplayWord(input, word, defs, alltags) {
 	return gottags && (matchedword || gotdef);
 }
 
-function shouldDisplayDef(input, tags, def) {
+function shouldDisplayEty(input, ety, etytags) {
+	let ret = false;
+	ety.forEach(function(item, idx) {
+		if (shouldDisplayDef(input, item, etytags[idx]))
+			ret = true;
+	});
+	return ret;
+}
+
+function shouldDisplayDef(input, def, deftags) {
 	const searchfortags = input.includes("#");
 	if (!searchfortags && searchmode !== "defs") // don't need to do anything
 		return true;
@@ -89,7 +102,7 @@ function shouldDisplayDef(input, tags, def) {
 	let matcheddef = false;
 	let tagsonly = true;
 	terms.forEach(function(item) {
-		if (item[0] === "#" && tags.includes(item.slice(1))) {
+		if (item[0] === "#" && deftags.includes(item.slice(1))) {
 			matchedtags = true;
 		} else if (item[0] !== "#") {
 			tagsonly = false;
@@ -100,20 +113,26 @@ function shouldDisplayDef(input, tags, def) {
 	return ((!searchfortags || matchedtags) && (tagsonly || (searchmode !== "defs" || matcheddef)));
 }
 
-function redraw(wordDisplayCallback, defDisplayCallback) {
+function redraw(wordDisplayCallback, etyDisplayCallback, defDisplayCallback) {
 	let mainarea = document.getElementById("main");
 	mainarea.textContent = ""; // clear all children
-	wordlist.forEach(function(item, idx) {
-		if (wordDisplayCallback(item, deflist[idx], taglist[idx])) {
+	wordlist.forEach(function(word, wordidx) {
+		if (wordDisplayCallback(word, etylist[wordidx], taglist[wordidx])) {
 			word_div = mainarea.insertAdjacentElement("beforeend", document.createElement("div"));
 			word_div.classList.add("entry");
-			word_div.insertAdjacentHTML("beforeend", "<h3 class=\"inline word\"><strong>" + item + "</strong></h3> ");
+			word_div.insertAdjacentHTML("beforeend", "<h3 class=\"inline word\"><strong>" + word + "</strong></h3> ");
 			defs_div = word_div.insertAdjacentElement("beforeend", document.createElement("div"));
 			defs_div.classList.add("defs");
-			desclist[idx].forEach(function(subitem, subidx) {
-				let x = defDisplayCallback(taglist[idx][subidx], deflist[idx][subidx]) ? "" : " class=\"greyout\"";
-				// this line is 239 cols long :face_holding_back_tears:
-				defs_div.insertAdjacentHTML("beforeend", "<li class=\"def\"" + x + "><i>" + subitem + "</i> " + deflist[idx][subidx] + (!hide_tags ? ("<br><p class=\"inline subtext\">tags: " + taglist[idx][subidx].join(" ") + "</p>") : "") + "</li>");
+			etylist[wordidx].forEach(function(ety, etyidx) {
+				if (etyDisplayCallback(deflist[wordidx][etyidx], taglist[wordidx][etyidx])) {
+					defs_div.insertAdjacentHTML("beforeend", "<p class=\"inline ety\">" + ety + "</p>");
+					deflist[wordidx][etyidx].forEach(function(def, defidx) {
+						let x = defDisplayCallback(def, taglist[wordidx][etyidx][defidx]) ? "" : "greyout";
+						// this line is 239 cols long :face_holding_back_tears:
+						// 262-304 now depending on tab width -an
+						defs_div.insertAdjacentHTML("beforeend", "<li class=\"def" + x + "\"><i>" + desclist[wordidx][etyidx][defidx] + "</i> " + def + (!hide_tags ? ("<br><p class=\"inline subtext\">tags: " + taglist[wordidx][etyidx][defidx].join(" ") + "</p>") : "") + "</li>");
+					});
+				}
 			});
 		}
 	});
@@ -138,10 +157,11 @@ function redraw(wordDisplayCallback, defDisplayCallback) {
 
 function refresh(input) {
 	if (input === "")
-		redraw(_ => true, _ => true);
+		redraw(_ => true, _ => true, _ => true);
 	else
 		redraw((word, defs, alltags) => shouldDisplayWord(input, word, defs, alltags),
-			(tags, def) => shouldDisplayDef(input, tags, def));
+			(ety, etytags) => shouldDisplayEty(input, ety, etytags),
+			(def, deftags) => shouldDisplayDef(input, def, deftags));
 }
 
 function setwmmode(wmmode) {
@@ -163,4 +183,4 @@ document.addEventListener("keypress", (e) => {
 	}
 });
 
-redraw(_ => true, _ => true);
+redraw(_ => true, _ => true, _ => true);
