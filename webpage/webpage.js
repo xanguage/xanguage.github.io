@@ -57,11 +57,9 @@ function shouldDisplayWord(input, word, etys, alltags) {
 						matchedword = true;
 					break;
 				case "defs":
-					etys.forEach(function(i, n) {
-						i.forEach(function(def, idx) {
-							if (match(item, def))
-								matcheddef.push(def);
-						});
+					etys.forEach(function(def) {
+						if (match(item, def))
+							matcheddef.push(def);
 					});
 			}
 		} else {
